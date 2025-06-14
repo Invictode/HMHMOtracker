@@ -1,0 +1,77 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* --- 1. NEW PURPLE THEME & GENERAL STYLES --- */
+:root {
+    --primary-color: #6a1b9a; /* Purple 800 */
+    --primary-dark: #4a148c; /* Purple 900 */
+    --primary-light: #f3e5f5; /* Purple 50 */
+    --secondary-color: #8e24aa; /* Purple 600 */
+    --accent-color: #7b1fa2; /* Purple 700 */
+    --background-color: #f3e5f5; /* Purple 50 */
+    --surface-color: #ffffff;
+    --text-primary: #212121;
+    --text-secondary: #616161;
+    --border-color: #e1bee7; /* Purple 100 */
+    --danger-color: #d32f2f;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+header {
+    background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
+    color: white;
+    padding: 1.2rem 2rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+header h1 { margin: 0; font-weight: 700; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+header nav { margin-top: 15px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.nav-btn { background-color: transparent; border: 1px solid #ffffff80; color: #ffffffc0; padding: 8px 16px; border-radius: 20px; font-family: 'Roboto', sans-serif; font-weight: 500; cursor: pointer; transition: all 0.3s ease; }
+.nav-btn:hover { background-color: #ffffff20; color: #ffffff; transform: translateY(-2px); }
+.nav-btn.active { background-color: var(--surface-color); color: var(--primary-dark); border-color: var(--surface-color); }
+.nav-btn.sign-out { background-color: var(--danger-color); border-color: var(--danger-color); color: white; margin-left: 20px; }
+.nav-btn.sign-out:hover { background-color: #c62828; }
+main { padding: 20px; }
+
+/* --- 2. WARD & PATIENT CARD STYLES --- */
+.view-container { display: none; }
+#ward-board-view { display: block; }
+.ward-section { background-color: var(--surface-color); border-radius: 16px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.05); margin-bottom: 30px; }
+.ward-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+.ward-header h2 { margin: 0; color: var(--primary-dark); font-weight: 700; }
+.ward-header h2 i { margin-right: 10px; color: var(--accent-color); }
+.bed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; }
+.patient-card { 
+    background-color: var(--surface-color); 
+    border: 1px solid var(--border-color); 
+    border-left: 5px solid var(--accent-color); 
+    border-radius: 12px; 
+    padding: 20px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+.patient-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+}
+.patient-card.vacant { border-left-color: #bdbdbd; background-color: #fafafa; }
+.patient-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+.patient-card-header .bed-number { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); }
+.patient-card-header .patient-name { font-size: 1.15rem; font-weight: 700; text-align: right; color: var(--text-primary); }
+.department-tag { font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; color: white; margin-left: 10px; }
+.dept-surgery { background-color: #0277bd; }
+.dept-internal-medicine { background-color: #00695c; }
+.dept-pediatrics { background-color: #f57c00; }
+.dept-gynecology { background-color: #d81b60; }
+.patient-info p { margin: 8px 0; font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; }
+.patient-info p strong { color: var(--text-primary); font-weight: 700; margin-right: 6px; }
+.empty-ward-message { grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary); font-style: italic; }

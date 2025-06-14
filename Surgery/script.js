@@ -33,7 +33,10 @@ auth.onAuthStateChanged(user => {
 function initializeApp() {
     // --- APP STATE & CONFIG ---
     const wardsConfig = [
-        { name: "Surgical Ward", beds: ["45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "HDU-1", "HDU-2"] }
+        { name: "Surgical Ward", beds: ["45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "HDU-1", "HDU-2"] },
+        { name: "Private Ward", beds: [] },
+        { name: "Medical Ward", beds: [] },
+        { name: "ICU", beds: [] }
     ];
     const DB_COLLECTIONS = {
         active: 'surgical_patients',
@@ -46,8 +49,8 @@ function initializeApp() {
 
     // --- DOM ELEMENT REFERENCES ---
     const mainContent = document.getElementById('main-content');
-    const modals = { patient: document.getElementById('patient-modal'), actions: document.getElementById('actions-modal'), hospitalTransfer: document.getElementById('hospital-transfer-modal') };
-    const forms = { patient: document.getElementById('patient-form'), hospitalTransfer: document.getElementById('hospital-transfer-form') };
+    const modals = { patient: document.getElementById('patient-modal'), actions: document.getElementById('actions-modal'), hospitalTransfer: document.getElementById('hospital-transfer-modal'), bedTransfer: document.getElementById('bed-transfer-modal') };
+    const forms = { patient: document.getElementById('patient-form'), hospitalTransfer: document.getElementById('hospital-transfer-form'), bedTransfer: document.getElementById('bed-transfer-form') };
     const signOutBtn = document.getElementById('sign-out-btn');
     const navButtons = { board: document.getElementById('nav-board'), discharged: document.getElementById('nav-discharged'), transferred: document.getElementById('nav-transferred'), lama: document.getElementById('nav-lama'), stats: document.getElementById('nav-stats') };
     const views = { board: document.getElementById('ward-board-view'), discharged: document.getElementById('discharged-view'), transferred: document.getElementById('transferred-view'), lama: document.getElementById('lama-view'), stats: document.getElementById('stats-view') };
@@ -56,6 +59,18 @@ function initializeApp() {
     const statsNav = { prevDay: document.getElementById('stats-prev-day'), nextDay: document.getElementById('stats-next-day'), dateDisplay: document.getElementById('stats-date-display') };
 
     // --- HELPER FUNCTIONS ---
+    function updateDashboardData(occupiedCount) {
+        const today = new Date();
+        const dateString = today.toISOString().slice(0, 10);
+        const storageKey = 'hmhmo_Surgery_history'; 
+        
+        let departmentHistory = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        departmentHistory[dateString] = occupiedCount;
+        
+        localStorage.setItem(storageKey, JSON.stringify(departmentHistory));
+        console.log(`Dashboard history for Surgery updated for ${dateString}: ${occupiedCount} beds`);
+    }
+
     function showView(viewName) {
         if (viewName === 'stats') updateStatsForDate();
         Object.values(views).forEach(v => { if (v) v.style.display = 'none'; });
@@ -71,8 +86,10 @@ function initializeApp() {
     function openPatientModal(patient, wardName, bedNumber) {
         const form = forms.patient;
         form.reset();
-        modals.patient.querySelector('#modal-title').textContent = patient ? `Edit Patient - Bed ${patient.bedNumber}` : `Admit Patient`;
+        modals.patient.querySelector('#modal-title').textContent = patient ? `Edit Patient - Bed ${patient.bedNumber}` : `Admit Patient to ${wardName}`;
         form.elements['patient-id-input'].value = patient ? patient.id : '';
+        form.elements['ward-name-input'].value = patient ? patient.ward : wardName;
+
         if (patient) {
             form.elements['bed-number'].value = patient.bedNumber;
             form.elements['department'].value = patient.department;
@@ -95,6 +112,26 @@ function initializeApp() {
         modals.actions.dataset.patientId = patient.id;
         modals.actions.style.display = 'block';
     }
+    
+    function openBedTransferModal(patient) {
+        const modal = document.getElementById('bed-transfer-modal');
+        if (!modal) return;
+        document.getElementById('bed-transfer-patient-name').textContent = patient.patientName;
+        modal.dataset.patientId = patient.id;
+
+        const wardSelect = document.getElementById('transfer-ward-select');
+        wardSelect.innerHTML = '';
+        wardsConfig.forEach(ward => {
+            const option = document.createElement('option');
+            option.value = ward.name;
+            option.textContent = ward.name;
+            if (ward.name === patient.ward) option.selected = true;
+            wardSelect.appendChild(option);
+        });
+
+        document.getElementById('transfer-bed-number').value = patient.bedNumber;
+        modal.style.display = 'block';
+    }
 
     function openHospitalTransferModal(patient) {
         forms.hospitalTransfer.querySelector('#hospital-transfer-patient-name').textContent = patient.patientName;
@@ -105,40 +142,46 @@ function initializeApp() {
 
     function archiveAndRemove(patient, collectionName, additionalData) {
         if (patient) {
-            const fullCollectionPath = `/artifacts/${appId}/public/data/${collectionName}`;
-            const activeDocPath = `/artifacts/${appId}/public/data/${DB_COLLECTIONS.active}/${patient.id}`;
-            
-            db.collection(fullCollectionPath).add({ ...patient, ...additionalData })
-                .then(() => db.doc(activeDocPath).delete());
+            const basePath = `/artifacts/${appId}/public/data/`;
+            db.collection(`${basePath}${collectionName}`).add({ ...patient, ...additionalData })
+                .then(() => db.collection(`${basePath}${DB_COLLECTIONS.active}`).doc(patient.id).delete());
         }
     }
 
     function handleDischargeAction(action, patient) {
-        // --- BUG FIX ---
-        // The 'patient' object must be passed as the first argument to archiveAndRemove.
         switch (action) {
+            case 'bed-transfer':
+                 openBedTransferModal(patient);
+                 closeModal('actions');
+                 break;
             case 'discharge-home':
-                if (confirm(`Confirm discharge for ${patient.patientName}?`)) {
-                    archiveAndRemove(patient, DB_COLLECTIONS.discharged, { dischargeTime: new Date().toISOString() });
-                    closeModal('actions');
-                }
+                archiveAndRemove(patient, DB_COLLECTIONS.discharged, { dischargeTime: new Date().toISOString() });
+                closeModal('actions');
                 break;
             case 'transfer':
                 openHospitalTransferModal(patient);
                 break;
             case 'lama':
-                if (confirm("Confirm LAMA?")) {
-                    archiveAndRemove(patient, DB_COLLECTIONS.lamaDor, { status: 'LAMA', eventTime: new Date().toISOString() });
-                    closeModal('actions');
-                }
+                archiveAndRemove(patient, DB_COLLECTIONS.lamaDor, { status: 'LAMA', eventTime: new Date().toISOString() });
+                closeModal('actions');
                 break;
             case 'dor':
-                if (confirm("Confirm DOR?")) {
-                    archiveAndRemove(patient, DB_COLLECTIONS.lamaDor, { status: 'DOR', eventTime: new Date().toISOString() });
-                    closeModal('actions');
-                }
+                archiveAndRemove(patient, DB_COLLECTIONS.lamaDor, { status: 'DOR', eventTime: new Date().toISOString() });
+                closeModal('actions');
                 break;
         }
+    }
+
+    function printPatientCard(patientId) {
+        const patient = allData.active.find(p => p.id === patientId);
+        if (!patient) return;
+        const printArea = document.getElementById('print-area');
+        const cardClone = document.querySelector(`.patient-card[data-id='${patientId}']`).cloneNode(true);
+        const actions = cardClone.querySelector('.card-actions');
+        if (actions) actions.remove();
+        printArea.innerHTML = '';
+        printArea.appendChild(cardClone);
+        window.print();
     }
 
     function renderWards() {
@@ -154,22 +197,46 @@ function initializeApp() {
 
     function renderAllPatients() {
         document.querySelectorAll('.bed-grid').forEach(grid => grid.innerHTML = '');
+        let surgicalOccupiedCount = 0;
+
         wardsConfig.forEach(wardInfo => {
-            const wardPatients = allData.active.filter(p => p.ward === wardInfo.name);
+            const allPatientsInWard = allData.active.filter(p => p.ward === wardInfo.name);
             const gridId = `grid-${wardInfo.name.replace(/\s+/g, '-')}`;
             const patientGrid = document.getElementById(gridId);
+
             if (patientGrid) {
-                wardInfo.beds.forEach(bedNumber => {
-                    const patient = wardPatients.find(p => p.bedNumber === bedNumber);
+                let bedsToRender;
+                if (wardInfo.name === "Surgical Ward") {
+                    bedsToRender = [...wardInfo.beds];
+                    const occupiedSurgicalBeds = new Set();
+                    allPatientsInWard.forEach(patient => {
+                        if (bedsToRender.includes(patient.bedNumber)) {
+                            occupiedSurgicalBeds.add(patient.bedNumber);
+                        }
+                    });
+                    surgicalOccupiedCount = occupiedSurgicalBeds.size;
+                } else {
+                    bedsToRender = allPatientsInWard.map(p => p.bedNumber);
+                }
+
+                if (bedsToRender.length === 0) {
+                    patientGrid.innerHTML = `<p class="empty-ward-message">No patients currently admitted.</p>`;
+                }
+                
+                bedsToRender.sort((a, b) => (parseInt(a.match(/\d+/)) || 0) - (parseInt(b.match(/\d+/)) || 0) || a.localeCompare(b));
+                
+                bedsToRender.forEach(bedNumber => {
+                    const patient = allPatientsInWard.find(p => p.bedNumber === bedNumber);
                     const card = document.createElement('div');
                     card.className = `patient-card ${patient ? '' : 'vacant'}`;
+                    
                     if (patient) {
                         card.dataset.id = patient.id;
                         const today = new Date();
                         const opDate = patient.dateOfOp ? new Date(patient.dateOfOp) : null;
                         const postOpDay = opDate ? Math.ceil((today - opDate) / (1000 * 60 * 60 * 24)) : 'N/A';
                         const deptClass = `dept-${patient.department?.toLowerCase().replace(/\s/g, '-') || 'default'}`;
-                        card.innerHTML = `<div class="patient-card-header"><span class="bed-number">Bed: ${patient.bedNumber}</span><div><span class="patient-name">${patient.patientName}</span><span class="department-tag ${deptClass}">${patient.department}</span></div></div><div class="patient-info"><p><strong>Age/Sex:</strong> ${patient.age || 'N/A'} / ${patient.sex || 'N/A'}</p><p><strong>Procedure:</strong> ${patient.procedure || 'N/A'}</p><p><strong>DOO:</strong> ${patient.dateOfOp || 'N/A'} (POD ${postOpDay})</p><p><strong>Status:</strong> ${patient.opStatus || 'N/A'}</p><p><strong>Plan:</strong> ${patient.plan || 'N/A'}</p></div><div class="card-actions"><button class="card-action-btn edit" data-action="edit"><i class="fa-solid fa-pen-to-square"></i> Details</button><button class="card-action-btn discharge" data-action="discharge"><i class="fa-solid fa-right-from-bracket"></i> Actions</button></div>`;
+                        card.innerHTML = `<div class="patient-card-header"><span class="bed-number">Bed: ${patient.bedNumber}</span><div><span class="patient-name">${patient.patientName}</span><span class="department-tag ${deptClass}">${patient.department}</span></div></div><div class="patient-info"><p><strong>Age/Sex:</strong> ${patient.age || 'N/A'} / ${patient.sex || 'N/A'}</p><p><strong>Procedure:</strong> ${patient.procedure || 'N/A'}</p><p><strong>DOO:</strong> ${patient.dateOfOp || 'N/A'} (POD ${postOpDay})</p><p><strong>Status:</strong> ${patient.opStatus || 'N/A'}</p><p><strong>Plan:</strong> ${patient.plan || 'N/A'}</p></div><div class="card-actions"><button class="card-action-btn edit" data-action="edit"><i class="fa-solid fa-pen-to-square"></i> Details</button><button class="card-action-btn discharge" data-action="discharge"><i class="fa-solid fa-right-from-bracket"></i> Actions</button><button class="card-action-btn print" data-action="print"><i class="fa-solid fa-print"></i> Print</button></div>`;
                     } else {
                         card.dataset.ward = wardInfo.name;
                         card.dataset.bed = bedNumber;
@@ -179,6 +246,7 @@ function initializeApp() {
                 });
             }
         });
+        updateDashboardData(surgicalOccupiedCount);
     }
 
     function updateStatsForDate() {
@@ -264,11 +332,12 @@ function initializeApp() {
             if (patientId) {
                 const patient = allData.active.find(p => p.id === patientId);
                 const actionBtn = e.target.closest('.card-action-btn');
-                if (actionBtn) {
+                if (actionBtn && patient) {
                     const action = actionBtn.dataset.action;
                     if (action === 'edit') openPatientModal(patient);
                     else if (action === 'discharge') openActionsModal(patient);
-                } else openPatientModal(patient);
+                    else if (action === 'print') printPatientCard(patientId);
+                } else if (patient) openPatientModal(patient);
             } else openPatientModal(null, card.dataset.ward, card.dataset.bed);
         }
     });
@@ -285,7 +354,7 @@ function initializeApp() {
         e.preventDefault();
         const patientId = forms.patient.elements['patient-id-input'].value;
         const patientData = {
-            ward: "Surgical Ward",
+            ward: forms.patient.elements['ward-name-input'].value,
             bedNumber: forms.patient.elements['bed-number'].value,
             department: forms.patient.elements['department'].value,
             patientName: forms.patient.elements['patient-name'].value,
@@ -297,7 +366,8 @@ function initializeApp() {
             diagnosis: forms.patient.elements['diagnosis'].value,
             plan: forms.patient.elements['plan'].value,
         };
-        const docRef = patientId ? db.doc(`/artifacts/${appId}/public/data/${DB_COLLECTIONS.active}/${patientId}`) : db.collection(`/artifacts/${appId}/public/data/${DB_COLLECTIONS.active}`);
+        const basePath = `/artifacts/${appId}/public/data/`;
+        const docRef = patientId ? db.collection(`${basePath}${DB_COLLECTIONS.active}`).doc(patientId) : db.collection(`${basePath}${DB_COLLECTIONS.active}`);
         
         if (patientId) {
             docRef.update(patientData).then(() => closeModal('patient'));
@@ -307,6 +377,22 @@ function initializeApp() {
         }
     });
     
+    forms.bedTransfer.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const patientId = modals.bedTransfer.dataset.patientId;
+        const newWard = document.getElementById('transfer-ward-select').value;
+        const newBed = document.getElementById('transfer-bed-number').value;
+        if (patientId && newWard && newBed) {
+            const basePath = `/artifacts/${appId}/public/data/`;
+            db.collection(`${basePath}${DB_COLLECTIONS.active}`).doc(patientId).update({
+                ward: newWard,
+                bedNumber: newBed
+            }).then(() => {
+                closeModal('bedTransfer');
+            });
+        }
+    });
+
     forms.hospitalTransfer.addEventListener('submit', (e) => {
         e.preventDefault();
         const patientId = forms.hospitalTransfer.elements['hospital-transfer-patient-id'].value;
