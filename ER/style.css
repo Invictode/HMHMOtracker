@@ -10,17 +10,19 @@ body {
 }
 
 header {
-    background: #004d40;
+    /* MODIFIED: Professional gradient background */
+    background: linear-gradient(135deg, #004d40 0%, #00796b 100%);
     color: white;
     padding: 1rem 2rem;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-bottom: 3px solid #00796b;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-bottom: 4px solid #004d40;
 }
 
 header h1 {
     margin: 0;
-    font-weight: 600;
+    font-weight: 700; /* Bolder for more emphasis */
+    letter-spacing: 1px;
 }
 
 header nav {
@@ -32,11 +34,11 @@ header nav {
 }
 
 .nav-btn {
-    background-color: transparent;
-    border: 1px solid #ffffff80;
-    color: #ffffffc0;
-    padding: 8px 16px;
-    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffffd0;
+    padding: 8px 18px; /* Slightly more padding */
+    border-radius: 50px; /* Pill shape */
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
     cursor: pointer;
@@ -44,25 +46,28 @@ header nav {
 }
 
 .nav-btn:hover {
-    background-color: #ffffff20;
+    background-color: rgba(255, 255, 255, 0.2);
     color: #ffffff;
+    transform: translateY(-2px);
 }
 
 .nav-btn.active {
     background-color: #ffffff;
     color: #004d40;
     border-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .nav-btn.sign-out {
-    background-color: #c62828;
-    border-color: #c62828;
+    background-color: #d32f2f;
+    border-color: #d32f2f;
     color: white;
     margin-left: 20px;
 }
 
 .nav-btn.sign-out:hover {
-    background-color: #b71c1c;
+    background-color: #c62828;
+    transform: translateY(-2px);
 }
 
 main {
@@ -120,19 +125,27 @@ main {
     line-height: 1.5;
     display: flex;
     align-items: center;
+    gap: 12px; /* Added gap for icon spacing */
 }
 
-.bed-info p i {
-    color: #00796b;
-    margin-right: 12px;
-    width: 20px;
-    text-align: center;
+/* NEW: Style for the professional SVG icons */
+.info-icon {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+    color: inherit; /* Icon color will match the text color of the zone */
 }
 
+/* MODIFIED: Make the field titles bold */
 .bed-info p strong {
-    font-weight: 600;
-    margin-right: 8px;
+    font-weight: 700; /* Bolder */
     color: #555;
+    margin-right: 5px;
+}
+
+/* MODIFIED: Separate patient data for styling */
+.patient-data {
+    color: inherit;
 }
 
 .vacant .bed-info p {
@@ -141,10 +154,35 @@ main {
     color: #777;
 }
 
-.resus-zone { border-left-color: #b71c1c; background-color: #ffebee; color: #b71c1c; }
+.resus-zone { border-left-color: #b71c1c; color: #b71c1c; }
 .red-zone { border-left-color: #d32f2f; color: #d32f2f; }
 .yellow-zone { border-left-color: #fbc02d; color: #f9a825; }
 .holding-bay { border-left-color: #7b1fa2; color: #7b1fa2; }
+
+/* Copy button styles */
+.copy-btn {
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    color: #6c757d;
+    padding: 4px 8px;
+    font-size: 0.8em;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: auto; /* Pushes the button to the right */
+}
+
+.copy-btn:hover {
+    background: #dee2e6;
+    color: #212529;
+}
+
+.copy-btn.copied {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
 
 .action-buttons {
     margin-top: 15px;
@@ -237,6 +275,17 @@ th {
 
 tbody tr:hover {
     background-color: #f0f2f5;
+}
+
+/* --- NEW Shift Header Row Style --- */
+.shift-header-row {
+    background-color: #e9ecef;
+    font-weight: 700;
+    color: #495057;
+}
+.shift-header-row td {
+    text-align: center;
+    font-size: 1.1em;
 }
 
 

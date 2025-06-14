@@ -10,7 +10,7 @@
     --surface-color: #ffffff;
     --text-primary: #333;
     --text-secondary: #616161;
-    --border-color: #e0e0e0;
+    --border-color: #f0d9e5;
     --danger-color: #d32f2f;
 }
 
@@ -22,7 +22,7 @@ body {
 }
 
 header {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     color: white;
     padding: 1rem 2rem;
     text-align: center;
@@ -39,7 +39,8 @@ header nav { margin-top: 15px; display: flex; justify-content: center; gap: 10px
 main { padding: 20px; }
 
 /* --- 2. WARD & PATIENT CARD STYLES --- */
-.view-container { display: flex; flex-direction: column; gap: 30px; }
+.view-container { display: none; flex-direction: column; gap: 30px; }
+#ward-board-view { display: flex; }
 .ward-section { background-color: var(--surface-color); border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(33, 49, 60, 0.05); }
 .ward-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
 .ward-header h2 { margin: 0; color: var(--primary-dark); }
@@ -47,21 +48,57 @@ main { padding: 20px; }
 .admit-btn { background-color: var(--primary-color); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; gap: 8px; }
 .admit-btn:hover { background-color: var(--primary-dark); }
 .bed-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
-.patient-card { background-color: #fff8fb; border: 1px solid var(--border-color); border-left: 5px solid var(--primary-color); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(33, 49, 60, 0.05); cursor: pointer; }
+.patient-card {
+    background-color: #fff8fb;
+    border: 1px solid var(--border-color);
+    border-left: 5px solid var(--primary-color);
+    border-radius: 8px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease-in-out;
+    /* MODIFIED: Dynamic shadow for occupied beds */
+    box-shadow: 0 4px 15px -5px rgba(123, 31, 162, 0.4);
+}
 .patient-card.monitoring { border-left-color: var(--secondary-color); background-color: #f3e5f5; }
-.patient-card.vacant:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-.patient-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+.patient-card.vacant {
+    justify-content: flex-start;
+    align-items: stretch;
+    background-color: #fff;
+    /* MODIFIED: No purple shadow for vacant beds */
+    box-shadow: 0 1px 3px rgba(33, 49, 60, 0.05);
+}
+.patient-card:hover:not(.vacant) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px -8px rgba(123, 31, 162, 0.5);
+}
+.patient-card-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
 .patient-card-header .bed-number { font-size: 1.5rem; font-weight: 700; color: var(--primary-dark); }
 .patient-card-header .patient-name { font-size: 1.15rem; font-weight: 600; text-align: right; }
+.patient-info { padding: 15px 20px; flex-grow: 1; }
 .patient-info p { margin: 8px 0; font-size: 0.9rem; color: var(--text-secondary); }
 .patient-info p strong { color: var(--text-primary); font-weight: 600; margin-right: 6px; }
-.card-actions { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end; }
+.patient-info p .info-value.bold { font-weight: 700; color: var(--text-primary); }
+.card-actions { margin-top: auto; padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 10px; justify-content: flex-end; }
 .card-action-btn { background: none; border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.2s; }
 .card-action-btn.edit { color: var(--primary-color); border-color: var(--primary-color); }
 .card-action-btn.discharge { color: var(--danger-color); border-color: var(--danger-color); }
 .card-action-btn:hover { color: white; }
 .card-action-btn.edit:hover { background-color: var(--primary-color); }
 .card-action-btn.discharge:hover { background-color: var(--danger-color); }
+
+/* NEW: Professional Vacant Status Style */
+.vacant-status {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #b0bec5; /* A soft, professional gray */
+}
 
 /* --- 3. MODAL & FORM STYLES --- */
 .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); overflow-y: auto; }
@@ -82,7 +119,6 @@ main { padding: 20px; }
 .action-modal-btn:hover i { color: var(--primary-color); }
 
 /* --- 4. LIST & STATS STYLES --- */
-.view-container { display: none; padding: 20px; }
 .list-header, .stats-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .list-header h2, .stats-header h2 { margin: 0; }
 .search-bar { padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border-color); }
@@ -102,3 +138,5 @@ tbody tr:hover { background-color: #fde4ec; }
 .stat-card { background-color: var(--surface-color); border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid var(--primary-color); }
 .stat-card h4 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; color: #333; }
 .stat-card .stat-number { margin: 0; font-size: 2.5rem; font-weight: 700; color: var(--text-primary); }
+.shift-header-row { background-color: #e9ecef; font-weight: 700; color: #495057; }
+.shift-header-row td { text-align: center; font-size: 1.1em; }

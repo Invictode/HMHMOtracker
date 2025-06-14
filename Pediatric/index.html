@@ -6,7 +6,7 @@
     <title>Pediatrics Patient Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="style.css">
 </head>
@@ -31,28 +31,28 @@
         <div id="discharged-view" class="view-container" style="display: none;">
             <div class="list-header">
                 <h2>Discharged Patients</h2>
-                <input type="text" id="search-discharged" class="search-bar" placeholder="Search...">
+                <input type="text" id="search-discharged" class="search-bar" placeholder="Search by name...">
             </div>
             <div class="table-container">
-                <table><thead><tr><th>Name</th><th>Bed</th><th>Discharge Time</th><th>Final Diagnosis</th></tr></thead><tbody id="discharged-table-body"></tbody></table>
+                <table><thead><tr><th>Name</th><th>Ward</th><th>Bed</th><th>Discharge Time</th><th>Final Diagnosis</th></tr></thead><tbody id="discharged-table-body"></tbody></table>
             </div>
         </div>
         <div id="transferred-view" class="view-container" style="display: none;">
             <div class="list-header">
                 <h2>Transferred Patients</h2>
-                <input type="text" id="search-transferred" class="search-bar" placeholder="Search...">
+                <input type="text" id="search-transferred" class="search-bar" placeholder="Search by name...">
             </div>
             <div class="table-container">
-                <table><thead><tr><th>Name</th><th>Bed</th><th>Transferred To</th><th>Transfer Time</th></tr></thead><tbody id="transferred-table-body"></tbody></table>
+                <table><thead><tr><th>Name</th><th>Ward</th><th>Bed</th><th>Transferred To</th><th>Transfer Time</th></tr></thead><tbody id="transferred-table-body"></tbody></table>
             </div>
         </div>
         <div id="lama-view" class="view-container" style="display: none;">
             <div class="list-header">
                 <h2>LAMA / DOR Patients</h2>
-                <input type="text" id="search-lama" class="search-bar" placeholder="Search...">
+                <input type="text" id="search-lama" class="search-bar" placeholder="Search by name...">
             </div>
             <div class="table-container">
-                <table><thead><tr><th>Name</th><th>Bed</th><th>Status</th><th>Event Time</th></tr></thead><tbody id="lama-table-body"></tbody></table>
+                <table><thead><tr><th>Name</th><th>Ward</th><th>Bed</th><th>Status</th><th>Event Time</th></tr></thead><tbody id="lama-table-body"></tbody></table>
             </div>
         </div>
 
@@ -95,12 +95,25 @@
                     <div class="form-group"><label for="patient-sex">Sex:</label><select id="patient-sex"><option value="Male">Male</option><option value="Female">Female</option></select></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="patient-weight">Weight (kg):</label><input type="number" step="0.1" id="patient-weight"></div>
+                    <div class="form-group"><label for="patient-weight">Weight (kg):</label><input type="number" step="0.01" id="patient-weight"></div>
                     <div class="form-group"><label for="immunization-status">Immunization Status:</label><input type="text" id="immunization-status"></div>
                 </div>
+                 <div class="form-row">
+                    <div class="form-group"><label for="blood-group">Blood Group:</label><input type="text" id="blood-group"></div>
+                    <div class="form-group">
+                        <label for="g6pd-status">G6PD Status:</label>
+                        <select id="g6pd-status">
+                            <option value="N/A">N/A</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Deficient">Deficient</option>
+                        </select>
+                    </div>
+                </div>
                 <label for="comorbidities">Comorbidities:</label><textarea id="comorbidities" rows="2"></textarea>
+                <label for="salient-history">Salient History:</label><textarea id="salient-history" rows="3"></textarea>
                 <label for="diagnosis">Diagnosis:</label><textarea id="diagnosis" rows="2"></textarea>
-                <label for="plan">Plan / Issues:</label><textarea id="plan" rows="4"></textarea>
+                <label for="ongoing-treatment">Ongoing Treatment:</label><textarea id="ongoing-treatment" rows="4"></textarea>
+                <label for="issues">Issues:</label><textarea id="issues" rows="3"></textarea>
                 <div class="form-actions"><button type="submit" id="save-patient-btn">Save Patient</button></div>
             </form>
         </div>
@@ -112,6 +125,7 @@
             <h2>Patient Actions</h2>
             <p>Select an action for: <strong id="actions-patient-name"></strong></p>
             <div class="actions-grid">
+                <button class="action-modal-btn" data-action="bed-transfer"><i class="fa-solid fa-bed"></i>Bed/Ward Transfer</button>
                 <button class="action-modal-btn" data-action="discharge-home"><i class="fa-solid fa-house-chimney-medical"></i>Discharge Home</button>
                 <button class="action-modal-btn" data-action="transfer"><i class="fa-solid fa-truck-medical"></i>Transfer to another hospital</button>
                 <button class="action-modal-btn" data-action="lama"><i class="fa-solid fa-person-walking-arrow-right"></i>LAMA</button>
@@ -128,10 +142,27 @@
                  <p>Transferring: <strong id="hospital-transfer-patient-name"></strong></p>
                  <input type="hidden" id="hospital-transfer-patient-id">
                  <label for="transfer-hospital">Destination Hospital:</label><input type="text" id="transfer-hospital" required>
-                 <button type="submit">Confirm Transfer</button>
+                 <div class="form-actions"><button type="submit">Confirm Transfer</button></div>
             </form>
         </div>
     </div>
+
+    <div id="bed-transfer-modal" class="modal">
+        <div class="modal-content">
+           <span class="close-button">&times;</span>
+           <h2>Bed/Ward Transfer</h2>
+           <form id="bed-transfer-form">
+                <p>Transferring patient: <strong id="bed-transfer-patient-name"></strong></p>
+                <label for="transfer-ward-select">New Ward:</label>
+                <select id="transfer-ward-select" required></select>
+                <label for="transfer-bed-number">New Bed Number:</label>
+                <input type="text" id="transfer-bed-number" required>
+                <div class="form-actions"><button type="submit">Confirm Transfer</button></div>
+           </form>
+       </div>
+   </div>
+
+   <div id="print-area" class="patient-card-print-area"></div>
 
     <!-- SCRIPT TAGS -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
