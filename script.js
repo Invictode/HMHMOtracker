@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 Gynecology: { name: "Gynecology",     totalBeds: 8 },
                 IM:         { name: "Internal Medicine", totalBeds: 11 },
                 Pediatric:  { name: "Pediatrics",     totalBeds: 6 },
-                Surgery:    { name: "Surgery",        totalBeds: 18 },
+                Surgery:    { name: "Surgery",        totalBeds: 15 },
                 Private:    { name: "Private Ward",   totalBeds: 12 } // ADDED THIS LINE
             };
 
